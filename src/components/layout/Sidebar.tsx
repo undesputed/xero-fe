@@ -1,12 +1,13 @@
 "use client";
 
-import { LayoutDashboard, List, Settings, Upload } from "lucide-react";
+import { LayoutDashboard, List, Settings, Upload, Clock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/settlements", label: "Settlements", icon: List },
+  { href: "/sessions", label: "Sessions", icon: Clock },
   { href: "/upload", label: "Upload CSV", icon: Upload },
 ];
 

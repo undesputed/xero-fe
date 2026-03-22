@@ -70,7 +70,7 @@ export function ReviewPanel({
             No documents in preview
           </p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {preview.map((doc, i) => (
               <PreviewCard key={i} doc={doc} />
             ))}

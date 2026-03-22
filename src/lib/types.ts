@@ -88,9 +88,38 @@ export interface SessionDetail {
   settlement_ref: string;
   file_name: string;
   created_at: string;
+  period_start: string;
+  period_end: string;
   preview: PreviewDocument[];
   xero_results: XeroResult[];
   error: string;
+}
+
+/** Row returned by GET /ingest/sessions (list endpoint) */
+export interface SessionSummary {
+  session_id: string;
+  status: "PENDING" | "APPROVED" | "DECLINED" | "FAILED";
+  channel: string;
+  file_type: string;
+  settlement_ref: string;
+  file_name: string;
+  created_at: string;
+  period_start: string;
+  period_end: string;
+  error: string;
+}
+
+/** Response from GET /channels or GET /channels/{channel} */
+export interface ChannelRecord {
+  channel: string;
+  display_name: string;
+  last_session_id: string;
+  last_settlement_ref: string;
+  last_period_start: string;
+  last_period_end: string;
+  last_created_at: string;
+  last_status: string;
+  total_sessions: number;
 }
 
 // ── Domain types ──────────────────────────────────────────────────────────────

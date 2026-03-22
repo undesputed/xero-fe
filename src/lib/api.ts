@@ -1,7 +1,9 @@
 import type {
   ApproveResponse,
+  ChannelRecord,
   IngestSessionResponse,
   SessionDetail,
+  SessionSummary,
   Settlement,
 } from "./types";
 
@@ -31,6 +33,16 @@ export async function ingestManoMano(
   return apiFetch<IngestSessionResponse>(url, { method: "POST", body: form });
 }
 
+/** Upload a ManoMano DEDUCTIONS-FROM-COMMISSIONS-*.csv. Returns a pending session with a preview. */
+export async function ingestManoManoDeductions(file: File): Promise<IngestSessionResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  return apiFetch<IngestSessionResponse>("/ingest/manomano/deductions", {
+    method: "POST",
+    body: form,
+  });
+}
+
 /** Upload a ManoMano Colibri SAS fee invoice PDF. Returns a pending session with a preview. */
 export async function ingestManoManoFees(file: File): Promise<IngestSessionResponse> {
   const form = new FormData();
@@ -42,6 +54,11 @@ export async function ingestManoManoFees(file: File): Promise<IngestSessionRespo
 }
 
 // ── Sessions ──────────────────────────────────────────────────────────────────
+
+/** List all sessions from xero-sessions, newest first. */
+export async function listSessions(): Promise<SessionSummary[]> {
+  return apiFetch<SessionSummary[]>("/ingest/sessions").catch(() => []);
+}
 
 /** Retrieve session status, preview, and Xero results. */
 export async function getSession(sessionId: string): Promise<SessionDetail> {
@@ -73,6 +90,16 @@ export async function rerunSession(sessionId: string): Promise<IngestSessionResp
     `/ingest/sessions/${encodeURIComponent(sessionId)}/rerun`,
     { method: "POST" },
   );
+}
+
+// ── Channels ──────────────────────────────────────────────────────────────────
+
+export async function getChannels(): Promise<ChannelRecord[]> {
+  return apiFetch<ChannelRecord[]>("/channels").catch(() => []);
+}
+
+export async function getChannel(channel: string): Promise<ChannelRecord | null> {
+  return apiFetch<ChannelRecord>(`/channels/${encodeURIComponent(channel)}`).catch(() => null);
 }
 
 // ── Settlements (future persistence) ─────────────────────────────────────────
