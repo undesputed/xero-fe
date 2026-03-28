@@ -3,24 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { TopBar } from "@/components/layout/TopBar";
-import { ChannelBadge } from "@/components/ui/ChannelBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { listSessions } from "@/lib/api";
 import type { SessionSummary } from "@/lib/types";
-
-const CHANNEL_LABELS: Record<string, string> = {
-  manomano: "ManoMano",
-  fruugo: "Fruugo",
-  onbuy: "OnBuy",
-  "amazon-uk": "Amazon UK",
-  "amazon-eu": "Amazon EU",
-  ebay: "eBay",
-  shopify: "Shopify",
-  bq: "B&Q",
-  debenhams: "Debenhams",
-  tesco: "Tesco",
-  therange: "The Range",
-};
 
 const FILE_TYPE_LABELS: Record<string, string> = {
   csv: "Settlement CSV",
@@ -48,13 +33,13 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function SessionsPage() {
+export default function ManoManoReviewPage() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterTab>("All");
 
   useEffect(() => {
-    listSessions().then((data) => {
+    listSessions("manomano").then((data) => {
       setSessions(data);
       setLoading(false);
     });
@@ -78,10 +63,10 @@ export default function SessionsPage() {
   return (
     <>
       <TopBar
-        title="Sessions"
+        title="ManoMano — Review"
         actions={
           <Link
-            href="/upload"
+            href="/channels/manomano/upload"
             className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-lg text-white"
             style={{ background: "var(--accent)" }}
           >
@@ -96,7 +81,7 @@ export default function SessionsPage() {
           className="flex gap-0 px-6 border-b overflow-x-auto"
           style={{ borderColor: "var(--border)", background: "var(--card-bg)" }}
         >
-          {TABS.map((tab, i) => (
+          {TABS.map((tab) => (
             <button
               key={tab.label}
               onClick={() => setActiveTab(tab.label)}
@@ -133,13 +118,12 @@ export default function SessionsPage() {
               className="px-4 py-3 text-xs font-semibold uppercase tracking-wide border-b"
               style={{
                 display: "grid",
-                gridTemplateColumns: "minmax(140px,1fr) 170px 140px 130px 110px 130px 90px",
+                gridTemplateColumns: "170px 140px 130px 110px 130px 90px",
                 background: "#f8fafc",
                 borderColor: "var(--border)",
                 color: "var(--text-muted)",
               }}
             >
-              <span>Channel</span>
               <span>Settlement Ref</span>
               <span>Period</span>
               <span>File Type</span>
@@ -157,10 +141,10 @@ export default function SessionsPage() {
                     className="px-4 py-4 animate-pulse"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "minmax(140px,1fr) 170px 140px 130px 110px 130px 90px",
+                      gridTemplateColumns: "170px 140px 130px 110px 130px 90px",
                     }}
                   >
-                    {[...Array(7)].map((_, i) => (
+                    {[...Array(6)].map((_, i) => (
                       <div key={i} className="h-4 rounded" style={{ background: "var(--border)", width: "70%" }} />
                     ))}
                   </div>
@@ -172,8 +156,12 @@ export default function SessionsPage() {
             {!loading && filtered.length === 0 && (
               <div className="py-12 text-center" style={{ color: "var(--text-muted)" }}>
                 <p className="text-sm">No sessions found.</p>
-                <Link href="/upload" className="text-sm font-medium underline mt-2 inline-block" style={{ color: "var(--accent)" }}>
-                  Upload a file →
+                <Link
+                  href="/channels/manomano/upload"
+                  className="text-sm font-medium underline mt-2 inline-block"
+                  style={{ color: "var(--accent)" }}
+                >
+                  Upload files →
                 </Link>
               </div>
             )}
@@ -187,20 +175,18 @@ export default function SessionsPage() {
                     className="px-4 py-3 items-center hover:bg-slate-50 transition-colors"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "minmax(140px,1fr) 170px 140px 130px 110px 130px 90px",
+                      gridTemplateColumns: "170px 140px 130px 110px 130px 90px",
                       borderTop: i > 0 ? "1px solid var(--border)" : undefined,
                     }}
                   >
                     <div>
-                      <ChannelBadge channel={CHANNEL_LABELS[s.channel] ?? s.channel} />
-                      <p className="font-mono text-xs mt-1 truncate" style={{ color: "var(--text-muted)" }}>
+                      <span className="font-mono text-xs font-medium" style={{ color: "var(--text-primary)" }}>
+                        {s.settlement_ref}
+                      </span>
+                      <p className="font-mono text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
                         {s.file_name}
                       </p>
                     </div>
-
-                    <span className="font-mono text-xs" style={{ color: "var(--text-primary)" }}>
-                      {s.settlement_ref}
-                    </span>
 
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                       {formatPeriod(s.period_start, s.period_end)}

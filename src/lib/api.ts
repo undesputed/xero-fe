@@ -33,31 +33,14 @@ export async function ingestManoMano(
   return apiFetch<IngestSessionResponse>(url, { method: "POST", body: form });
 }
 
-/** Upload a ManoMano DEDUCTIONS-FROM-COMMISSIONS-*.csv. Returns a pending session with a preview. */
-export async function ingestManoManoDeductions(file: File): Promise<IngestSessionResponse> {
-  const form = new FormData();
-  form.append("file", file);
-  return apiFetch<IngestSessionResponse>("/ingest/manomano/deductions", {
-    method: "POST",
-    body: form,
-  });
-}
-
-/** Upload a ManoMano Colibri SAS fee invoice PDF. Returns a pending session with a preview. */
-export async function ingestManoManoFees(file: File): Promise<IngestSessionResponse> {
-  const form = new FormData();
-  form.append("file", file);
-  return apiFetch<IngestSessionResponse>("/ingest/manomano/fees", {
-    method: "POST",
-    body: form,
-  });
-}
-
 // ── Sessions ──────────────────────────────────────────────────────────────────
 
-/** List all sessions from xero-sessions, newest first. */
-export async function listSessions(): Promise<SessionSummary[]> {
-  return apiFetch<SessionSummary[]>("/ingest/sessions").catch(() => []);
+/** List all sessions, newest first. Pass channel to filter to a specific channel. */
+export async function listSessions(channel?: string): Promise<SessionSummary[]> {
+  const url = channel
+    ? `/ingest/sessions?channel=${encodeURIComponent(channel)}`
+    : "/ingest/sessions";
+  return apiFetch<SessionSummary[]>(url).catch(() => []);
 }
 
 /** Retrieve session status, preview, and Xero results. */
@@ -81,10 +64,7 @@ export async function declineSession(sessionId: string): Promise<{ status: strin
   );
 }
 
-/**
- * Re-run a session — re-parses the stored file and returns a new pending session.
- * Use ingestManoMano / ingestManoManoFees to upload a different file instead.
- */
+/** Re-run a session — re-parses the stored file and returns a new pending session. */
 export async function rerunSession(sessionId: string): Promise<IngestSessionResponse> {
   return apiFetch<IngestSessionResponse>(
     `/ingest/sessions/${encodeURIComponent(sessionId)}/rerun`,

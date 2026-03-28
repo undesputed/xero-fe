@@ -1,22 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  /* KU Pipeline design tokens */
-  --sidebar-bg: #0f172a;
-  --sidebar-text: #94a3b8;
-  --sidebar-active: #0d9488;
-  --page-bg: #f8fafc;
+  /* KU Pipeline — Xero Blue colour scheme */
+  --sidebar-bg: #1a1a2e;
+  --sidebar-text: #8892a4;
+  --sidebar-hover: #13131f;
+  --sidebar-active: #13b5ea;
+
+  --page-bg: #f5f7fa;
   --card-bg: #ffffff;
   --text-primary: #1e293b;
   --text-muted: #64748b;
   --border: #e2e8f0;
 
+  --accent: #13b5ea;
+  --accent-hover: #0ea5d4;
+
   /* Status colours */
-  --status-complete: #10b981;
+  --status-done: #00b386;
   --status-pending: #f59e0b;
-  --status-in-progress: #3b82f6;
   --status-failed: #ef4444;
   --status-paused: #94a3b8;
+  --status-due: #e2e8f0;
 }
 
 @theme inline {

@@ -21,7 +21,7 @@ export function ChannelBadge({ channel }: ChannelBadgeProps) {
   const cfg = CHANNEL_COLORS[key] ?? { bg: "#f1f5f9", text: "#475569" };
   return (
     <span
-      className="inline-block px-2 py-0.5 rounded text-xs font-medium capitalize"
+      className="inline-block px-2 py-0.5 rounded-md text-xs font-medium capitalize"
       style={{ background: cfg.bg, color: cfg.text }}
     >
       {channel}

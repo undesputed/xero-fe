@@ -1,12 +1,15 @@
+import type { ReactNode } from "react";
+
 interface TopBarProps {
   title: string;
   breadcrumb?: string;
+  actions?: ReactNode;
 }
 
-export function TopBar({ title, breadcrumb }: TopBarProps) {
+export function TopBar({ title, breadcrumb, actions }: TopBarProps) {
   return (
     <header
-      className="h-14 flex items-center px-6 border-b"
+      className="sticky top-0 z-10 h-14 flex items-center justify-between px-6 border-b"
       style={{ background: "var(--card-bg)", borderColor: "var(--border)" }}
     >
       <div>
@@ -19,6 +22,9 @@ export function TopBar({ title, breadcrumb }: TopBarProps) {
           {title}
         </h1>
       </div>
+      {actions && (
+        <div className="flex items-center gap-2">{actions}</div>
+      )}
     </header>
   );
 }

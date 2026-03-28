@@ -1,10 +1,10 @@
 import type { DocType } from "@/lib/types";
 
-const DOC_CONFIG: Record<DocType, { label: string; color: string; bg: string }> = {
-  ACCREC: { label: "Sales Invoice", color: "#0d9488", bg: "#f0fdfa" },
-  ACCPAY: { label: "Fee Bill", color: "#7c3aed", bg: "#faf5ff" },
-  ACCRECCREDIT: { label: "Credit Note", color: "#d97706", bg: "#fffbeb" },
-  PAYMENT: { label: "Payment", color: "#2563eb", bg: "#eff6ff" },
+const DOC_CONFIG: Record<DocType, { label: string; color: string; bg: string; border: string }> = {
+  ACCREC:       { label: "Sales Invoice",       color: "var(--accent)", bg: "#e8f8fd", border: "#b3e9f9" },
+  ACCPAY:       { label: "Fee Bill",            color: "#7c3aed",       bg: "#faf5ff", border: "#e9d5ff" },
+  ACCRECCREDIT: { label: "Credit Note",         color: "#d97706",       bg: "#fffbeb", border: "#fde68a" },
+  PAYMENT:      { label: "Settlement Payment",  color: "#2563eb",       bg: "#eff6ff", border: "#bfdbfe" },
 };
 
 interface LineItem {
@@ -29,7 +29,7 @@ export function DocumentCard({ type, reference, date, lines, total, skipped, xer
   return (
     <div
       className="rounded-xl border p-4 flex flex-col gap-3"
-      style={{ background: cfg.bg, borderColor: "#e2e8f0" }}
+      style={{ background: cfg.bg, borderColor: cfg.border }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
@@ -63,7 +63,7 @@ export function DocumentCard({ type, reference, date, lines, total, skipped, xer
               </span>
             </div>
           ))}
-          <div className="border-t pt-1.5 flex justify-between text-sm font-semibold" style={{ borderColor: "#e2e8f0" }}>
+          <div className="border-t pt-1.5 flex justify-between text-sm font-semibold" style={{ borderColor: cfg.border }}>
             <span style={{ color: "var(--text-muted)" }}>Total</span>
             <span style={{ color: "var(--text-primary)" }}>£{(total ?? 0).toFixed(2)}</span>
           </div>

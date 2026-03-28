@@ -1,10 +1,10 @@
 import type { PreviewDocument } from "@/lib/types";
 
 const DOC_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  ACCREC: { label: "Sales Invoice", color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4" },
-  ACCPAY: { label: "Fee Bill", color: "#7c3aed", bg: "#faf5ff", border: "#e9d5ff" },
-  ACCRECCREDIT: { label: "Credit Note", color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
-  PAYMENT: { label: "Settlement Payment", color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
+  ACCREC:       { label: "Sales Invoice",      color: "var(--accent)", bg: "#e8f8fd", border: "#b3e9f9" },
+  ACCPAY:       { label: "Fee Bill",           color: "#7c3aed",       bg: "#faf5ff", border: "#e9d5ff" },
+  ACCRECCREDIT: { label: "Credit Note",        color: "#d97706",       bg: "#fffbeb", border: "#fde68a" },
+  PAYMENT:      { label: "Settlement Payment", color: "#2563eb",       bg: "#eff6ff", border: "#bfdbfe" },
 };
 
 interface PreviewCardProps {
@@ -68,7 +68,8 @@ export function PreviewCard({ doc }: PreviewCardProps) {
 
       {/* Line items */}
       {doc.line_items && doc.line_items.length > 0 && (
-        <div className="space-y-1.5">
+        <div>
+          <div className="space-y-1.5 overflow-y-auto pr-1" style={{ maxHeight: "200px" }}>
           {doc.line_items.map((li, i) => (
             <div key={i} className="flex justify-between text-xs gap-2">
               <span className="truncate" style={{ color: "var(--text-muted)" }}>
@@ -91,8 +92,9 @@ export function PreviewCard({ doc }: PreviewCardProps) {
               </span>
             </div>
           ))}
+          </div>
           <div
-            className="border-t pt-1.5 flex justify-between text-xs font-semibold"
+            className="border-t pt-1.5 flex justify-between text-xs font-semibold mt-1.5"
             style={{ borderColor: cfg.border }}
           >
             <span style={{ color: "var(--text-muted)" }}>Total (ex VAT)</span>

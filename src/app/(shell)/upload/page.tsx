@@ -1,158 +1,164 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TopBar } from "@/components/layout/TopBar";
 import { DropZone } from "@/components/upload/DropZone";
-import {
-  ingestManoMano,
-  ingestManoManoDeductions,
-  ingestManoManoFees,
-} from "@/lib/api";
+import { ingestManoMano } from "@/lib/api";
 
-// ── Channel configuration ──────────────────────────────────────────────────────
-
+// Only CSV channels require manual upload — all API channels (Amazon, Mirakl, eBay, Shopify)
+// are triggered automatically on a schedule via AWS Lambda.
 const CHANNELS = [
-  {
-    value: "manomano",
-    label: "ManoMano — Settlement CSV",
-    accept: ".csv",
-    hint: "Semicolon-delimited settlement file (ORDER / REFUND rows)",
-    active: true,
-  },
-  {
-    value: "manomano-fees",
-    label: "ManoMano — Fee Invoice PDF",
-    accept: ".pdf",
-    hint: "Colibri SAS PDF invoice (Subscription, Booster, Commission)",
-    active: true,
-  },
-  {
-    value: "manomano-deductions",
-    label: "ManoMano — Commission Deductions CSV",
-    accept: ".csv",
-    hint: "DEDUCTIONS-FROM-COMMISSIONS-*.csv (commissions withheld on refunds)",
-    active: true,
-  },
-  {
-    value: "fruugo",
-    label: "Fruugo — blocked pending VAT decision",
-    accept: ".csv",
-    hint: null,
-    active: false,
-  },
-  {
-    value: "onbuy",
-    label: "OnBuy — paused",
-    accept: ".csv",
-    hint: null,
-    active: false,
-  },
+  { value: "manomano", label: "ManoMano — Settlement CSV", accept: ".csv", hint: "Semicolon-delimited settlement file (ORDER / REFUND / SUBSCRIPTION / BOOSTER / REFUND_PENALTY rows)" },
+  { value: "fruugo",   label: "Fruugo — Settlement CSV",   accept: ".csv", hint: "Settlement CSV (VAT treatment pending confirmation)"  },
+  { value: "onbuy",    label: "OnBuy — Settlement CSV",    accept: ".csv", hint: "Settlement CSV (channel currently paused)"            },
 ];
 
-// ── Page ───────────────────────────────────────────────────────────────────────
+const STEPS = [
+  { n: 1, title: "Parse",   body: "File is validated and rows are extracted into structured line items." },
+  { n: 2, title: "Preview", body: "Xero documents are generated for your review — nothing is posted yet." },
+  { n: 3, title: "Review",  body: "Inspect each invoice, bill, and credit note before approving." },
+  { n: 4, title: "Push",    body: "Approved documents are posted to Xero with idempotency protection." },
+];
 
 export default function UploadPage() {
   const router = useRouter();
-  const [channelValue, setChannelValue] = useState("manomano");
+  const searchParams = useSearchParams();
+  const initialChannel = CHANNELS.find((c) => c.value === searchParams.get("channel"))?.value ?? "manomano";
+  const [channelValue, setChannelValue] = useState(initialChannel);
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const channel = CHANNELS.find((c) => c.value === channelValue) ?? CHANNELS[0];
-  const canSubmit = file !== null && channel.active && !uploading;
 
-  const handleUpload = async () => {
+  async function handleUpload() {
     if (!file) return;
-    setUploading(true);
+    setLoading(true);
     setError(null);
     try {
-      const res =
-        channelValue === "manomano-fees"
-          ? await ingestManoManoFees(file)
-          : channelValue === "manomano-deductions"
-            ? await ingestManoManoDeductions(file)
-            : await ingestManoMano(file);
-      // Redirect to dedicated review page
-      router.push(`/review/${res.session_id}`);
+      const result = await ingestManoMano(file);
+      router.push(`/review/${result.session_id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setUploading(false);
+      setError(err instanceof Error ? err.message : "Upload failed");
+      setLoading(false);
     }
-  };
+  }
 
   return (
     <>
-      <TopBar title="Upload Settlement" />
-      <main className="flex-1 p-6 w-full space-y-6">
+      <TopBar title="Upload Settlement File" />
+      <main className="flex-1 p-6">
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
 
-        {/* Channel selector */}
-        <section className="space-y-2">
-          <label
-            className="block text-sm font-medium"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Channel
-          </label>
-          <select
-            value={channelValue}
-            onChange={(e) => {
-              setChannelValue(e.target.value);
-              setFile(null);
-              setError(null);
-            }}
-            className="w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
-            style={{
-              borderColor: "var(--border)",
-              background: "var(--card-bg)",
-              color: "var(--text-primary)",
-            }}
-          >
-            {CHANNELS.map((c) => (
-              <option key={c.value} value={c.value} disabled={!c.active}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          {/* ── Left column: selector + dropzone ─────────────────────────────── */}
+          <div className="space-y-5">
 
-          {channel.active && channel.hint && (
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {channel.hint}
-            </p>
-          )}
-          {!channel.active && (
-            <p className="text-xs text-amber-600">
-              This channel is not yet available in Phase 1.
-            </p>
-          )}
-        </section>
+            {/* Channel selector */}
+            <div
+              className="rounded-xl border p-5 space-y-4"
+              style={{ borderColor: "var(--border)", background: "var(--card-bg)" }}
+            >
+              <div>
+                <label
+                  className="block text-sm font-semibold mb-1.5"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Select channel
+                </label>
+                <select
+                  value={channelValue}
+                  onChange={(e) => { setChannelValue(e.target.value); setFile(null); }}
+                  className="w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                  style={{
+                    borderColor: "var(--border)",
+                    background: "#f8fafc",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {CHANNELS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                {channel.hint && (
+                  <p className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>
+                    {channel.hint}
+                  </p>
+                )}
+              </div>
 
-        {/* Drop zone */}
-        {channel.active && (
-          <DropZone
-            onFile={setFile}
-            accept={channel.accept}
-            fileTypeLabel={channel.accept === ".pdf" ? "PDF" : "CSV"}
-          />
-        )}
+              <div>
+                <p className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+                  Accepted file type
+                </p>
+                <span
+                  className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold"
+                  style={{ background: "#e8f8fd", color: "var(--accent)" }}
+                >
+                  {channel.accept.toUpperCase().replace(".", "")}
+                </span>
+              </div>
+            </div>
 
-        {/* Error banner */}
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <strong>Error:</strong> {error}
+            {/* Drop zone */}
+            <DropZone
+              onFile={setFile}
+              accept={channel.accept}
+              fileTypeLabel="CSV"
+            />
+
+            {/* Error message */}
+            {error && (
+              <p className="text-sm rounded-lg px-3 py-2" style={{ background: "#fef2f2", color: "#dc2626" }}>
+                {error}
+              </p>
+            )}
+
+            {/* Upload button */}
+            <button
+              disabled={file === null || loading}
+              onClick={handleUpload}
+              className="w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+              style={{ background: "var(--accent)" }}
+            >
+              {loading ? "Uploading…" : "Upload & Push to Xero"}
+            </button>
+
           </div>
-        )}
 
-        {/* Upload button */}
-        <button
-          onClick={handleUpload}
-          disabled={!canSubmit}
-          className="w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
-          style={{ background: "var(--sidebar-active)" }}
-        >
-          {uploading ? "Processing…" : "Upload & Preview"}
-        </button>
+          {/* ── Right column: explainer card ─────────────────────────────────── */}
+          <div
+            className="rounded-xl border p-5 h-fit"
+            style={{ borderColor: "var(--border)", background: "var(--card-bg)" }}
+          >
+            <p className="text-sm font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+              What happens next
+            </p>
+            <div className="space-y-4">
+              {STEPS.map((step) => (
+                <div key={step.n} className="flex gap-3">
+                  <span
+                    className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                    style={{ background: "var(--accent)" }}
+                  >
+                    {step.n}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {step.title}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {step.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
+        </div>
       </main>
     </>
   );
